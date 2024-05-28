@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: goeth-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: do-block-storage
+  hostPath:
+    path: /mnt/data/goeth2
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: goeth-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      name: goeth-pv
+  storageClassName: do-block-storage
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: geth-mainnet-full
+  namespace: default
+spec:
+  serviceName: "geth-mainnet-full"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: geth-mainnet-full
+  template:
+    metadata:
+      labels:
+        app: geth-mainnet-full
+    spec:
+      initContainers:
+      - name: init-cleanup
+        image: busybox
+        command: ["sh", "-c", "rm -rf /data/geth-mainnet-full3/*"]
+        volumeMounts:
+        - name: data
+          mountPath: /data/geth-mainnet-full3
+      containers:
+      - name: geth-mainnet-full
+        image: ethereum/client-go:latest
+        args:
+          [
+            "--sepolia",
+            "--syncmode=snap",
+            "--authrpc.jwtsecret=/jwtsecret/jwtsecret",
+            "--authrpc.addr=0.0.0.0",
+            "--authrpc.vhosts=*",
+            "--http",
+            "--http.addr=0.0.0.0",
+            "--http.api=eth,net,web3,txpool,engine,admin",
+            "--datadir=/data/geth-mainnet-full3",
+          ]
+        ports:
+        - name: http
+          containerPort: 8545
+        - name: p2p
+          containerPort: 30303
+        - name: other
+          containerPort: 8551
+        volumeMounts:
+        - name: data
+          mountPath: "/data/geth-mainnet-full3"
+        - name: jwtsecret
+          mountPath: /jwtsecret
+      volumes:
+      - name: jwtsecret
+        secret:
+          secretName: jwtsecret
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: do-block-storage
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: geth-mainnet-full
+  namespace: default
+spec:
+  selector:
+    app: geth-mainnet-full
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8545
+    targetPort: 8545
+  - name: p2p
+    protocol: TCP
+    port: 30303
+    targetPort: 30303
+  - name: other
+    protocol: TCP
+    port: 8551
+    targetPort: 8551

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prysm-validator
+  labels:
+    app: prysm-validator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prysm-validator
+  template:
+    metadata:
+      labels:
+        app: prysm-validator
+    spec:
+      initContainers:
+      - name: init-copy-keys
+        image: busybox
+        command: ["sh", "-c", "cp /keys/keystore-* /simple_keys/ && cp /keys/deposit_* /simple_keys/ && ls -al /keys && ls -al /simple_keys"]
+        volumeMounts:
+        - name: validator-keys
+          mountPath: /keys
+        - name: simple-keys
+          mountPath: /simple_keys
+      containers:
+      - name: prysm-validator
+        image: gcr.io/prysmaticlabs/prysm/validator:stable
+        command: ["/bin/bash"]
+        args:
+          [
+            "-c",
+            "
+            ./validator accounts import --keys-dir=/simple_keys --wallet-dir=/wallet --wallet-password-file=/password/wallet-password.txt --account-password-file=/password/wallet-password.txt --accept-terms-of-use && 
+            ./validator --beacon-rpc-provider=prysm-beacon:4000 --wallet-dir=/wallet --wallet-password-file=/password/wallet-password.txt --datadir=/validatorDB --suggested-fee-recipient=0xca445c18D0a2C3a9cfdec9C6c73d98d7c100Aa2e --accept-terms-of-use 
+            "
+          ]
+        volumeMounts:
+        - name: simple-keys
+          mountPath: /simple_keys
+        - name: prysm-wallet
+          mountPath: /wallet
+        - name: wallet-password
+          mountPath: /password
+          readOnly: true
+        - name: validator-db
+          mountPath: /validatorDB
+      volumes:
+      - name: validator-keys
+        secret:
+          secretName: validator-keys
+      - name: simple-keys
+        emptyDir: {}
+      - name: prysm-wallet
+        emptyDir: {}
+      - name: wallet-password
+        secret:
+          secretName: wallet-password
+      - name: validator-db
+        emptyDir: {}
