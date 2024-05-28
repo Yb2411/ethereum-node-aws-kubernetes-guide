@@ -23,6 +23,8 @@ Prysm Beacon Chain is a client implementation for Ethereum 2.0 written in Go. Th
 ### Prysm Validator
 Prysm Validator is a client software that allows individuals to participate as validators in the Ethereum 2.0 network. Validators replace miners in the PoS consensus mechanism, staking their ETH to propose and attest to new blocks. The Prysm Validator client manages the validator's duties, including key management, signing blocks and attestations, and communicating with the Beacon Chain to ensure the integrity and security of the blockchain. Validators are rewarded with ETH for their participation and adherence to the protocol.
 
+![0_tfwuH_A1WlxUZsjP](https://github.com/Yb2411/ethereum-node-aws-kubernetes-guide/assets/132000325/23da400d-6d09-45fe-9edb-fe85f5c22396)
+
 ## Steps to Deploy
 
 ### 1. Setting Up the Infrastructure with Terraform
