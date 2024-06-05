@@ -31,10 +31,3 @@ resource "aws_route_table_association" "eks" {
   route_table_id = aws_route_table.eks.id
 }
 
-output "vpc_id" {
-  value = aws_vpc.eks.id
-}
-
-output "subnet_ids" {
-  value = aws_subnet.eks[*].id
-}

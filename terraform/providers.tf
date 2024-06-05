@@ -1,5 +1,5 @@
 provider "aws" {
-  profile = "default"
+  profile = "anais"
   region  = "eu-west-3"
 }
 
@@ -11,12 +11,4 @@ provider "kubernetes" {
   config_context_cluster   = "aws"
   config_context_auth_info = "aws"
   config_context           = "aws"
-}
-
-data "aws_eks_cluster" "eks" {
-  name = aws_eks_cluster.eks.name
-}
-
-data "aws_eks_cluster_auth" "eks" {
-  name = aws_eks_cluster.eks.name
 }
